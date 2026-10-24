@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُحوِّل الضمائر الإنجليزية - English Pronoun Converter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Tajawal', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+        .font-en {
+            font-family: 'Inter', sans-serif;
+            direction: ltr;
+            text-align: left;
+        }
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* Diff Highlights */
+        .diff-added {
+            background-color: rgba(34, 197, 94, 0.25);
+            color: #4ade80;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            border-bottom: 2px solid #22c55e;
+        }
+        .diff-removed {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            padding: 2px 4px;
+            border-radius: 4px;
+            text-decoration: line-through;
+            margin-left: 2px;
+            margin-right: 2px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen transition-colors duration-300 flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 py-6 max-w-7xl flex-grow">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center pb-6 border-b border-slate-800 mb-8 gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-brand-600/20 border border-brand-500/30 rounded-2xl text-brand-400">
+                    <i data-lucide="arrow-left-right" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-brand-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
+                        مُحوِّل الضمائر الإنجليزية
+                    </h1>
+                    <p class="text-xs md:text-sm text-slate-400 mt-1">
+                        أداة ذكية لتحويل الضمائر بين المتكلم (I) والمخاطب (You) وتعديل الأفعال تلقائياً
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle-btn" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="تبديل المظهر">
+                    <i data-lucide="sun" id="theme-icon-sun" class="w-5 h-5 hidden"></i>
+                    <i data-lucide="moon" id="theme-icon-moon" class="w-5 h-5"></i>
+                </button>
+                
+                <!-- Quick Guide Button -->
+                <a href="#guide-section" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium transition">
+                    <i data-lucide="book-open" class="w-4 h-4 text-brand-400"></i>
+                    <span>دليل القواعد</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Mode Switcher -->
+        <section class="mb-6">
+            <div class="bg-slate-800/80 p-2 rounded-2xl border border-slate-700/80 max-w-2xl mx-auto shadow-lg backdrop-blur-md">
+                <div class="grid grid-cols-2 gap-2 text-center text-sm font-semibold">
+                    <button id="mode-1to2-btn" onclick="setConversionMode('1to2')" class="py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 bg-brand-600 text-white shadow-md shadow-brand-600/30">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                        <span>المتكلم إلى المخاطب (I &rarr; You)</span>
+                    </button>
+                    <button id="mode-2to1-btn" onclick="setConversionMode('2to1')" class="py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>المخاطب إلى المتكلم (You &rarr; I)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dual Text Editors Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Input Card -->
+            <div class="bg-slate-800/50 border border-slate-700/70 rounded-2xl p-5 shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+                        <h2 class="font-bold text-slate-200 text-base" id="input-title-label">النص الأصلي (المتكلم)</h2>
+                    </div>
+                    <!-- Sample preset dropdown -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="loadSampleText()" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-700/70 hover:bg-slate-700 text-brand-300 border border-slate-600/50 transition flex items-center gap-1.5">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                            <span>نص تجريبي</span>
+                        </button>
+                        <button onclick="clearInputText()" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-700/70 hover:bg-rose-900/40 text-slate-300 hover:text-rose-300 border border-slate-600/50 transition flex items-center gap-1.5" title="مسح النص">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <span>مسح</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="relative flex-grow min-h-[220px]">
+                    <textarea 
+                        id="input-text" 
+                        class="w-full h-full p-4 bg-slate-900/80 border border-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl text-slate-100 font-en text-base leading-relaxed resize-y outline-none transition" 
+                        placeholder="Type or paste your English text here... (e.g. I am very happy with my new project because I did it myself.)"
+                        spellcheck="false"
+                    >I am working on my new website. I told myself that I can achieve my goals if I keep practicing every day. You can reach out to me anytime.</textarea>
+                </div>
+
+                <!-- Input Footer Stats -->
+                <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-700/50 text-xs text-slate-400 font-en">
+                    <div class="flex gap-4">
+                        <span>Words: <strong id="input-word-count" class="text-slate-200">0</strong></span>
+                        <span>Chars: <strong id="input-char-count" class="text-slate-200">0</strong></span>
+                    </div>
+                    <div class="flex items-center gap-1 text-slate-400">
+                        <i data-lucide="keyboard" class="w-3.5 h-3.5"></i>
+                        <span class="text-[11px]">تحويل مباشر أثناء الكتابة</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Card -->
+            <div class="bg-slate-800/50 border border-slate-700/70 rounded-2xl p-5 shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        <h2 class="font-bold text-slate-200 text-base" id="output-title-label">النص المُحوَّل (المخاطب)</h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- View Switcher: Normal vs Highlighted Diff -->
+                        <div class="bg-slate-900/60 p-0.5 rounded-lg border border-slate-700 flex text-xs">
+                            <button id="view-raw-btn" onclick="toggleDiffView(false)" class="px-2.5 py-1 rounded-md bg-brand-600 text-white font-medium transition">عادي</button>
+                            <button id="view-diff-btn" onclick="toggleDiffView(true)" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 font-medium transition">تمييز التغييرات</button>
+                        </div>
+                        
+                        <button onclick="copyOutputText()" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-md shadow-emerald-600/20 border border-emerald-500/50 transition flex items-center gap-1.5">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>نسخ</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="relative flex-grow min-h-[220px]">
+                    <!-- Standard Textarea Output -->
+                    <textarea 
+                        id="output-text" 
+                        readonly 
+                        class="w-full h-full p-4 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-100 font-en text-base leading-relaxed resize-y outline-none cursor-text font-normal"
+                        placeholder="Result will appear here automatically..."
+                    ></textarea>
+
+                    <!-- Highlighted Diff Container (Hidden by default) -->
+                    <div 
+                        id="output-diff-container" 
+                        class="hidden w-full h-full p-4 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-100 font-en text-base leading-relaxed overflow-y-auto whitespace-pre-wrap font-normal"
+                    ></div>
+                </div>
+
+                <!-- Output Footer Stats -->
+                <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-700/50 text-xs text-slate-400 font-en">
+                    <div class="flex gap-4">
+                        <span>Words: <strong id="output-word-count" class="text-slate-200">0</strong></span>
+                        <span>Chars: <strong id="output-char-count" class="text-slate-200">0</strong></span>
+                    </div>
+                    <button onclick="swapTexts()" class="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1 transition" title="تبديل النصوص بين الصندوقين">
+                        <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i>
+                        <span>تبديل الصندوقين</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Quick Replacement Summary Bar -->
+        <section class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-4 mb-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+            <div class="flex items-center gap-2 text-slate-300">
+                <i data-lucide="sliders" class="w-4 h-4 text-brand-400"></i>
+                <span class="font-medium">خيارات القواعد الذكية:</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-6 text-xs text-slate-300">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="opt-verbs" checked onchange="processText()" class="w-4 h-4 accent-brand-500 rounded bg-slate-900 border-slate-700">
+                    <span>تعديل تصريف الأفعال المساعدة (am/are, was/were)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="opt-possessives" checked onchange="processText()" class="w-4 h-4 accent-brand-500 rounded bg-slate-900 border-slate-700">
+                    <span>تحويل ملكية الضمائر (my &rarr; your / mine &rarr; yours)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="opt-reflexive" checked onchange="processText()" class="w-4 h-4 accent-brand-500 rounded bg-slate-900 border-slate-700">
+                    <span>تحويل الضمائر المنعكسة (myself &rarr; yourself)</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- History Log Drawer / Modal Toggle -->
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="history" class="w-5 h-5 text-brand-400"></i>
+                    <span>سجل التحويلات الأخيرة</span>
+                </h3>
+                <button onclick="clearHistory()" class="text-xs text-slate-400 hover:text-rose-400 transition flex items-center gap-1">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                    <span>مسح السجل</span>
+                </button>
+            </div>
+            <div id="history-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic History Cards inserted here -->
+                <div class="col-span-full py-8 text-center text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
+                    لا يوجد سجل تحويلات سابق حتى الآن. قم بتحويل أي نص ليتم حفظه هنا تلقائياً.
+                </div>
+            </div>
+        </section>
+
+        <!-- Comprehensive Educational Guide Section in Arabic -->
+        <section id="guide-section" class="bg-slate-800/40 border border-slate-700/80 rounded-2xl p-6 md:p-8 shadow-2xl mb-12">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-700/80 mb-6">
+                <div class="p-2.5 bg-brand-600/20 text-brand-400 border border-brand-500/30 rounded-xl">
+                    <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-white">دليل قواعد تحويل الضمائر الإنجليزية</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">كيف تعمل الضمائر والأفعال عند الانتقال بين المتكلم والمخاطب</p>
+                </div>
+            </div>
+
+            <!-- Guide Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Subject & Object Pronouns -->
+                <div class="space-y-4">
+                    <h3 class="text-base font-bold text-brand-300 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        <span>1. ضمائر الفاعل والمفعول به (Subject & Object Pronouns)</span>
+                    </h3>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        عند تحويل النص الإنجليزي، يحل الضمير <code class="text-brand-300 font-en font-bold">You</code> محل ضمير المتكلم الفاعل <code class="text-brand-300 font-en font-bold">I</code> وضمير المفعول <code class="text-brand-300 font-en font-bold">me</code>. لاحظ أن الضمير <code class="text-brand-300 font-en font-bold">You</code> يُستخدم بنفس الشكل في الحالتين.
+                    </p>
+                    <div class="overflow-x-auto rounded-xl border border-slate-700/80">
+                        <table class="w-full text-right text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-200 border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3">نوع الضمير</th>
+                                    <th class="p-3 font-en">1st Person (المتكلم)</th>
+                                    <th class="p-3 font-en">2nd Person (المخاطب)</th>
+                                    <th class="p-3">مثال</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50 bg-slate-900/30 font-en">
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">فاعل (Subject)</td>
+                                    <td class="p-3 font-semibold text-brand-300">I</td>
+                                    <td class="p-3 font-semibold text-emerald-400">You</td>
+                                    <td class="p-3 font-sans text-slate-400">I run &rarr; You run</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">مفعول (Object)</td>
+                                    <td class="p-3 font-semibold text-brand-300">me</td>
+                                    <td class="p-3 font-semibold text-emerald-400">you</td>
+                                    <td class="p-3 font-sans text-slate-400">Call me &rarr; Call you</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">صفة ملكية (Possessive Adj)</td>
+                                    <td class="p-3 font-semibold text-brand-300">my</td>
+                                    <td class="p-3 font-semibold text-emerald-400">your</td>
+                                    <td class="p-3 font-sans text-slate-400">my car &rarr; your car</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">ضمير ملكية (Possessive Pronoun)</td>
+                                    <td class="p-3 font-semibold text-brand-300">mine</td>
+                                    <td class="p-3 font-semibold text-emerald-400">yours</td>
+                                    <td class="p-3 font-sans text-slate-400">It is mine &rarr; It is yours</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">منعكس (Reflexive)</td>
+                                    <td class="p-3 font-semibold text-brand-300">myself</td>
+                                    <td class="p-3 font-semibold text-emerald-400">yourself</td>
+                                    <td class="p-3 font-sans text-slate-400">by myself &rarr; by yourself</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Auxiliary Verbs & Contractions -->
+                <div class="space-y-4">
+                    <h3 class="text-base font-bold text-brand-300 flex items-center gap-2">
+                        <i data-lucide="git-merge" class="w-4 h-4"></i>
+                        <span>2. الأفعال المساعدة والاختصارات (Verbs & Contractions)</span>
+                    </h3>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        يتطلب التغيير من المتكلم إلى المخاطب تعديل الفعل المساعد الملازم للفاعل حتى يستقيم المعنى النحوي:
+                    </p>
+                    <div class="overflow-x-auto rounded-xl border border-slate-700/80">
+                        <table class="w-full text-right text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-200 border-b border-slate-700">
+                                <tr>
+                                    <th class="p-3">نوع التغيير</th>
+                                    <th class="p-3 font-en">المتكلم (1st Person)</th>
+                                    <th class="p-3 font-en">المخاطب (2nd Person)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50 bg-slate-900/30 font-en">
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">زمن المضارع (Present)</td>
+                                    <td class="p-3 text-brand-300">I am / I'm</td>
+                                    <td class="p-3 text-emerald-400">You are / You're</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">زمن الماضي (Past)</td>
+                                    <td class="p-3 text-brand-300">I was</td>
+                                    <td class="p-3 text-emerald-400">You were</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">الملكية والمضارع التام</td>
+                                    <td class="p-3 text-brand-300">I have / I've</td>
+                                    <td class="p-3 text-emerald-400">You have / You've</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">المستقبل والرغبة</td>
+                                    <td class="p-3 text-brand-300">I'll / I'd</td>
+                                    <td class="p-3 text-emerald-400">You'll / You'd</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-sans text-slate-400">النفي المباشر</td>
+                                    <td class="p-3 text-brand-300">I am not / I wasn't</td>
+                                    <td class="p-3 text-emerald-400">You aren't / You weren't</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example Cards Comparison -->
+            <div class="mt-6 pt-6 border-t border-slate-700/80">
+                <h3 class="text-base font-bold text-slate-200 mb-4 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i>
+                    <span>أمثلة توضيحية للمقارنة قبل وبعد التحويل:</span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-en">
+                    <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-700/70">
+                        <div class="text-xs text-brand-400 font-sans mb-1 font-semibold">مثال 1: الجمل اليومية المباشرة</div>
+                        <div class="text-slate-300 mb-2"><strong class="text-rose-400">I:</strong> "I am waiting for my friend because he invited me."</div>
+                        <div class="text-slate-200"><strong class="text-emerald-400">You:</strong> "You are waiting for your friend because he invited you."</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-700/70">
+                        <div class="text-xs text-brand-400 font-sans mb-1 font-semibold">مثال 2: الاختصارات والأزمنة المركبة</div>
+                        <div class="text-slate-300 mb-2"><strong class="text-rose-400">I:</strong> "I've done it myself and I was proud of my result."</div>
+                        <div class="text-slate-200"><strong class="text-emerald-400">You:</strong> "You've done it yourself and you were proud of your result."</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800/80 py-6 text-center text-xs text-slate-500">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-3">
+            <p>© 2026 تطبيق تحويل الضمائر الإنجليزية. جميع الحقوق محفوظة.</p>
+            <p class="flex items-center gap-1">
+                <span>تم التطوير باستخدام أحدث قواعد التحويل اللغوي</span>
+                <i data-lucide="code2" class="w-4 h-4 text-brand-400 inline"></i>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Main Application JavaScript Logic -->
+    <script>
+        // --- State Management ---
+        let currentMode = '1to2'; // '1to2' (I -> You) or '2to1' (You -> I)
+        let isDiffView = false;
+        let historyState = [];
+
+        // Sample texts for testing
+        const sampleTexts = {
+            '1to2': "I am planning my trip to Japan. I have packed my bags by myself, and I'm very excited. If you need me, send me a message.",
+            '2to1': "You are planning your trip to Japan. You have packed your bags by yourself, and you're very excited. If I need you, send you a message."
+        };
+
+        // --- Replacement Dictionaries & Regex Patterns ---
+
+        // 1st Person -> 2nd Person Mapping
+        const rules1to2 = [
+            // Contractions & Verbs combined
+            { src: /\bI'm\b/g, repl: "you're" },
+            { src: /\bi'm\b/g, repl: "you're" },
+            { src: /\bI've\b/g, repl: "you've" },
+            { src: /\bi've\b/g, repl: "you've" },
+            { src: /\bI'll\b/g, repl: "you'll" },
+            { src: /\bi'll\b/g, repl: "you'll" },
+            { src: /\bI'd\b/g, repl: "you'd" },
+            { src: /\bi'd\b/g, repl: "you'd" },
+
+            // Subject + Verb phrases (Preserves correct tense shifts)
+            { src: /\bI am\b/g, repl: "you are" },
+            { src: /\bi am\b/g, repl: "you are" },
+            { src: /\bI was\b/g, repl: "you were" },
+            { src: /\bi was\b/g, repl: "you were" },
+
+            // Negative patterns
+            { src: /\bam I not\b/gi, repl: "aren't you" },
+            { src: /\bam I\b/gi, repl: "are you" },
+            { src: /\bwas I\b/gi, repl: "were you" },
+
+            // Reflexive
+            { src: /\bmyself\b/gi, repl: "yourself" },
+
+            // Possessives
+            { src: /\bmine\b/gi, repl: "yours" },
+            { src: /\bmy\b/gi, repl: "your" },
+
+            // Pronouns (I, me) -> You
+            { src: /\bI\b/g, repl: "you" },
+            { src: /\bi\b/g, repl: "you" },
+            { src: /\bme\b/gi, repl: "you" }
+        ];
+
+        // 2nd Person -> 1st Person Mapping
+        const rules2to1 = [
+            // Contractions
+            { src: /\byou're\b/gi, repl: "I'm" },
+            { src: /\byou've\b/gi, repl: "I've" },
+            { src: /\byou'll\b/gi, repl: "I'll" },
+            { src: /\byou'd\b/gi, repl: "I'd" },
+
+            // Subject + Verbs
+            { src: /\byou are\b/gi, repl: "I am" },
+            { src: /\byou were\b/gi, repl: "I was" },
+            { src: /\baren't you\b/gi, repl: "am I not" },
+            { src: /\bare you\b/gi, repl: "am I" },
+            { src: /\bwere you\b/gi, repl: "was I" },
+
+            // Reflexive
+            { src: /\byourself\b/gi, repl: "myself" },
+            { src: /\byourselves\b/gi, repl: "ourselves" },
+
+            // Possessives
+            { src: /\byours\b/gi, repl: "mine" },
+            { src: /\byour\b/gi, repl: "my" },
+
+            // General "you" -> "I"
+            { src: /\byou\b/gi, repl: "I" }
+        ];
+
+        // Helper function for capitalization preservation
+        function applyCase(original, replacement) {
+            if (!original) return replacement;
+            // All uppercase
+            if (original === original.toUpperCase() && original.length > 1) {
+                return replacement.toUpperCase();
+            }
+            // Capitalized
+            if (original[0] === original[0].toUpperCase()) {
+                return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+            }
+            return replacement.toLowerCase();
+        }
+
+        // Core conversion logic engine
+        function convertText(text, mode) {
+            if (!text.trim()) return { text: '', diffHtml: '' };
+
+            let converted = text;
+            const changesMap = [];
+
+            // Select active rule list
+            const rules = mode === '1to2' ? rules1to2 : rules2to1;
+
+            // Optional filter checks
+            const optVerbs = document.getElementById('opt-verbs')?.checked ?? true;
+            const optPossessives = document.getElementById('opt-possessives')?.checked ?? true;
+            const optReflexive = document.getElementById('opt-reflexive')?.checked ?? true;
+
+            // Tokenize text to preserve non-word elements and apply transformations cleanly
+            // Words + contractions regex tokenization
+            const wordRegex = /\b[A-Za-z']+\b/g;
+
+            // Replace full string using carefully ordered rules
+            rules.forEach(rule => {
+                // Skip rules based on toggles
+                if (!optVerbs && (rule.repl.includes("are") || rule.repl.includes("were") || rule.repl.includes("am") || rule.repl.includes("was"))) {
+                    return;
+                }
+                if (!optPossessives && (rule.repl.includes("your") || rule.repl.includes("my") || rule.repl.includes("yours") || rule.repl.includes("mine"))) {
+                    return;
+                }
+                if (!optReflexive && (rule.repl.includes("yourself") || rule.repl.includes("myself"))) {
+                    return;
+                }
+
+                converted = converted.replace(rule.src, (match) => {
+                    // Match case
+                    return applyCase(match, rule.repl);
+                });
+            });
+
+            // Generate Diff HTML for visual visualization mode
+            const origWords = text.split(/(\s+|[.,!?;:"]+)/);
+            const convWords = converted.split(/(\s+|[.,!?;:"]+)/);
+
+            let diffHtml = '';
+            for (let i = 0; i < Math.max(origWords.length, convWords.length); i++) {
+                const orig = origWords[i] || '';
+                const conv = convWords[i] || '';
+
+                if (orig === conv) {
+                    diffHtml += escapeHtml(conv);
+                } else {
+                    diffHtml += `<span class="diff-removed">${escapeHtml(orig)}</span><span class="diff-added">${escapeHtml(conv)}</span>`;
+                }
+            }
+
+            return { text: converted, diffHtml: diffHtml };
+        }
+
+        function escapeHtml(string) {
+            return string
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // --- UI & Event Handlers ---
+
+        function processText() {
+            const inputVal = document.getElementById('input-text').value;
+            const outputArea = document.getElementById('output-text');
+            const outputDiffArea = document.getElementById('output-diff-container');
+
+            const result = convertText(inputVal, currentMode);
+
+            outputArea.value = result.text;
+            outputDiffArea.innerHTML = result.diffHtml || result.text;
+
+            updateStats();
+        }
+
+        function setConversionMode(mode) {
+            currentMode = mode;
+            const btn1to2 = document.getElementById('mode-1to2-btn');
+            const btn2to1 = document.getElementById('mode-2to1-btn');
+            const inputLabel = document.getElementById('input-title-label');
+            const outputLabel = document.getElementById('output-title-label');
+
+            if (mode === '1to2') {
+                btn1to2.className = "py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 bg-brand-600 text-white shadow-md shadow-brand-600/30";
+                btn2to1.className = "py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50";
+                inputLabel.innerText = "النص الأصلي (المتكلم - First Person)";
+                outputLabel.innerText = "النص المُحوَّل (المخاطب - Second Person)";
+            } else {
+                btn2to1.className = "py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 bg-brand-600 text-white shadow-md shadow-brand-600/30";
+                btn1to2.className = "py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50";
+                inputLabel.innerText = "النص الأصلي (المخاطب - Second Person)";
+                outputLabel.innerText = "النص المُحوَّل (المتكلم - First Person)";
+            }
+
+            processText();
+            showToast(mode === '1to2' ? "تم التغيير إلى وضع: المتكلم إلى المخاطب" : "تم التغيير إلى وضع: المخاطب إلى المتكلم");
+        }
+
+        function updateStats() {
+            const inputText = document.getElementById('input-text').value;
+            const outputText = document.getElementById('output-text').value;
+
+            // Input Stats
+            const inWords = inputText.trim() ? inputText.trim().split(/\s+/).length : 0;
+            const inChars = inputText.length;
+            document.getElementById('input-word-count').innerText = inWords;
+            document.getElementById('input-char-count').innerText = inChars;
+
+            // Output Stats
+            const outWords = outputText.trim() ? outputText.trim().split(/\s+/).length : 0;
+            const outChars = outputText.length;
+            document.getElementById('output-word-count').innerText = outWords;
+            document.getElementById('output-char-count').innerText = outChars;
+        }
+
+        function toggleDiffView(showDiff) {
+            isDiffView = showDiff;
+            const rawArea = document.getElementById('output-text');
+            const diffArea = document.getElementById('output-diff-container');
+            const rawBtn = document.getElementById('view-raw-btn');
+            const diffBtn = document.getElementById('view-diff-btn');
+
+            if (showDiff) {
+                rawArea.classList.add('hidden');
+                diffArea.classList.remove('hidden');
+                diffBtn.className = "px-2.5 py-1 rounded-md bg-brand-600 text-white font-medium transition";
+                rawBtn.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 font-medium transition";
+            } else {
+                diffArea.classList.add('hidden');
+                rawArea.classList.remove('hidden');
+                rawBtn.className = "px-2.5 py-1 rounded-md bg-brand-600 text-white font-medium transition";
+                diffBtn.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 font-medium transition";
+            }
+        }
+
+        function loadSampleText() {
+            document.getElementById('input-text').value = sampleTexts[currentMode];
+            processText();
+            showToast("تم تحميل نص تجريبي");
+        }
+
+        function clearInputText() {
+            document.getElementById('input-text').value = '';
+            processText();
+            showToast("تم مسح النص");
+        }
+
+        function copyOutputText() {
+            const outputVal = document.getElementById('output-text').value;
+            if (!outputVal) {
+                showToast("لا يوجد نص للنسخ!", "error");
+                return;
+            }
+
+            // Using fallback method for clipboard execution inside frame environment
+            const tempTextarea = document.createElement("textarea");
+            tempTextarea.value = outputVal;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempTextarea);
+
+            showToast("تم نسخ النص المحوّل بنجاح!");
+            addToHistory(document.getElementById('input-text').value, outputVal);
+        }
+
+        function swapTexts() {
+            const inputElem = document.getElementById('input-text');
+            const outputVal = document.getElementById('output-text').value;
+
+            if (!outputVal) return;
+
+            inputElem.value = outputVal;
+            // Reverse mode
+            setConversionMode(currentMode === '1to2' ? '2to1' : '1to2');
+            showToast("تم تبديل النصوص والعكس المباشر");
+        }
+
+        // --- History Management ---
+
+        function addToHistory(input, output) {
+            if (!input.trim() || !output.trim()) return;
+
+            // Avoid duplicate identical top history
+            if (historyState.length > 0 && historyState[0].input === input) return;
+
+            const newItem = {
+                id: Date.now(),
+                mode: currentMode,
+                input: input.length > 70 ? input.substring(0, 70) + '...' : input,
+                output: output.length > 70 ? output.substring(0, 70) + '...' : output,
+                fullInput: input,
+                time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            historyState.unshift(newItem);
+            if (historyState.length > 6) historyState.pop(); // limit to 6 recent items
+
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            if (historyState.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-8 text-center text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
+                        لا يوجد سجل تحويلات سابق حتى الآن. قم بتحويل أي نص ليتم حفظه هنا تلقائياً.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = historyState.map(item => `
+                <div onclick="restoreHistoryItem(${item.id})" class="bg-slate-800/40 hover:bg-slate-800 border border-slate-700/60 p-4 rounded-xl cursor-pointer transition flex flex-col justify-between gap-2 text-xs group">
+                    <div class="flex justify-between items-center text-slate-400 font-sans">
+                        <span class="text-brand-400 font-medium">${item.mode === '1to2' ? 'I → You' : 'You → I'}</span>
+                        <span>${item.time}</span>
+                    </div>
+                    <div class="font-en text-slate-300 group-hover:text-white transition">
+                        <p class="line-clamp-1 opacity-80">${escapeHtml(item.input)}</p>
+                        <p class="line-clamp-1 font-semibold text-emerald-400 mt-1">&rarr; ${escapeHtml(item.output)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function restoreHistoryItem(id) {
+            const item = historyState.find(h => h.id === id);
+            if (item) {
+                setConversionMode(item.mode);
+                document.getElementById('input-text').value = item.fullInput;
+                processText();
+                showToast("تم إرجاع النص من السجل");
+            }
+        }
+
+        function clearHistory() {
+            historyState = [];
+            renderHistory();
+            showToast("تم مسح السجل كاملاً");
+        }
+
+        // --- Notification Toasts ---
+
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'error' ? 'bg-rose-600' : 'bg-brand-600';
+
+            toast.className = `${bgColor} text-white px-4 py-2.5 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2 transform transition-all duration-300 translate-y-[-20px] opacity-0 pointer-events-auto`;
+            toast.innerHTML = `
+                <i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-4 h-4"></i>
+                <span>${message}</span>
+            `;
+
+            toastContainer.appendChild(toast);
+            lucide.createIcons({ targets: [toast] });
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-[-20px]', 'opacity-0');
+            }, 10);
+
+            // Remove toast after delay
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 2500);
+        }
+
+        // --- Theme Switching Logic ---
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+
+        themeToggleBtn.addEventListener('click', () => {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                html.classList.add('dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        });
+
+        // --- Initialization ---
+        window.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide Icons
+            lucide.createIcons();
+
+            // Realtime listening on input change
+            const inputArea = document.getElementById('input-text');
+            inputArea.addEventListener('input', processText);
+
+            // Perform initial conversion for default text
+            processText();
+        });
+    </script>
+</body>
+</html>
